@@ -1,6 +1,4 @@
-// src/components/Cropper.js
-import React, { useState, useRef, useEffect } from 'react';
-import { Rnd } from 'react-rnd';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const aspectRatios = {
   '9:18': 9 / 18,
@@ -11,43 +9,80 @@ const aspectRatios = {
   '4:5': 4 / 5
 };
 
-const Cropper = ({ aspectRatio, setCropperData }) => {
-  const [size, setSize] = useState({ width: 100, height: 100 });
+const Cropper = ({ aspectRatio, setCropperData, containerRef }) => {
+  const [size, setSize] = useState({ width: 0, height: 0 });
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const cropperRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    const height = size.width / aspectRatios[aspectRatio];
-    setSize({ ...size, height });
-  }, [aspectRatio]);
+    if (containerRef.current) {
+      const containerHeight = containerRef.current.offsetHeight;
+      const containerWidth = containerRef.current.offsetWidth;
+      const newWidth = containerHeight * aspectRatios[aspectRatio];
+      
+      setSize({
+        width: Math.min(newWidth, containerWidth),
+        height: containerHeight
+      });
+      
+      setPosition({
+        x: (containerWidth - Math.min(newWidth, containerWidth)) / 2,
+        y: 0
+      });
+    }
+  }, [aspectRatio, containerRef]);
 
-  const onResize = (e, direction, ref, delta, position) => {
-    setSize({
-      width: ref.offsetWidth,
-      height: ref.offsetHeight,
-    });
-    setPosition(position);
-    setCropperData({ width: ref.offsetWidth, height: ref.offsetHeight, x: position.x, y: position.y });
-  };
+  useEffect(() => {
+    setCropperData({ ...size, ...position });
+  }, [size, position, setCropperData]);
 
-  const onDragStop = (e, d) => {
-    setPosition({ x: d.x, y: d.y });
-    setCropperData({ width: size.width, height: size.height, x: d.x, y: d.y });
-  };
+  const handleMouseDown = useCallback((e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  }, [position]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (isDragging && containerRef.current) {
+      const containerWidth = containerRef.current.offsetWidth;
+      const newX = Math.max(0, Math.min(e.clientX - dragStart.x, containerWidth - size.width));
+      setPosition(prev => ({ ...prev, x: newX }));
+    }
+  }, [isDragging, dragStart, size.width, containerRef]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   return (
-    <Rnd
-      size={{ width: size.width, height: size.height }}
-      position={{ x: position.x, y: position.y }}
-      onDragStop={onDragStop}
-      onResize={onResize}
-      minHeight={50}
-      minWidth={50}
-      bounds="parent"
-      ref={cropperRef}
-    >
-      <div style={{ border: '2px solid #000', width: '100%', height: '100%' }} />
-    </Rnd>
+    <div
+      style={{
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+        border: '2px solid #fff',
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        transform: `translateX(${position.x}px)`,
+        cursor: 'move',
+      }}
+      onMouseDown={handleMouseDown}
+    />
   );
 };
 
