@@ -70,19 +70,52 @@ const Cropper = ({ aspectRatio, setCropperData, containerRef }) => {
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   return (
-    <div
-      style={{
-        width: `${size.width}px`,
-        height: `${size.height}px`,
-        border: '2px solid #fff',
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        transform: `translateX(${position.x}px)`,
-        cursor: 'move',
-      }}
-      onMouseDown={handleMouseDown}
-    />
+    <>
+      <div className="cropper-overlay" />
+      <div
+        className="cropper"
+        style={{
+          width: `${size.width}px`,
+          height: `${size.height}px`,
+          transform: `translateX(${position.x}px)`,
+        }}
+        onMouseDown={handleMouseDown}
+      />
+      <style jsx>{`
+        .cropper-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          pointer-events: none;
+        }
+        .cropper {
+          border: 2px solid #00ff00;
+          position: absolute;
+          top: 0;
+          left: 0;
+          cursor: move;
+          background-color: rgba(0, 0, 0, 0);
+          background-image: 
+            linear-gradient(to right, rgba(255,255,255,.2) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,.2) 1px, transparent 1px);
+          background-size: 33.33% 33.33%;
+          pointer-events: auto;
+        }
+        .cropper::before {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          background-color: transparent;
+          pointer-events: none;
+        }
+      `}</style>
+    </>
   );
 };
 
