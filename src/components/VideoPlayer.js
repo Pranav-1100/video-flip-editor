@@ -131,7 +131,7 @@ const VideoPlayer = () => {
         <div className="video-section">
           <div className="video-container" ref={playerContainerRef}>
             <ReactPlayer
-              url="/videos/abc.mp4"
+              url="/videos/abcd.mp4"
               playing={playing}
               volume={volume}
               playbackRate={playbackRate}

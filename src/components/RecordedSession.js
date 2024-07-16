@@ -151,7 +151,7 @@ const RecordedSession = ({ recordedData }) => {
         <canvas ref={canvasRef} />
         <video 
           ref={videoRef} 
-          src="/videos/abc.mp4" 
+          src="/videos/abcd.mp4" 
           style={{ display: 'none' }} 
           crossOrigin="anonymous"
           preload="auto"
